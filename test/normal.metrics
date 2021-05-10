@@ -1,0 +1,24 @@
+# HELP clash_connection_download_total Number of bytes that downloaded by clash.
+# TYPE clash_connection_download_total counter
+clash_connection_download_total 111
+# HELP clash_connection_upload_total Number of bytes that uploaded by clash.
+# TYPE clash_connection_upload_total counter
+clash_connection_upload_total 222
+# HELP clash_exporter_scrapes_total Current total Clash scrapes.
+# TYPE clash_exporter_scrapes_total counter
+clash_exporter_scrapes_total 1
+# HELP clash_proxy_delay Proxy delay.
+# TYPE clash_proxy_delay gauge
+clash_proxy_delay{name="proxy_Http",type="Http"} 666
+clash_proxy_delay{name="proxy_Shadowsocks",type="Shadowsocks"} 666
+clash_proxy_delay{name="proxy_ShadowsocksR",type="ShadowsocksR"} 666
+clash_proxy_delay{name="proxy_Snell",type="Snell"} 666
+clash_proxy_delay{name="proxy_Socks5",type="Socks5"} 666
+clash_proxy_delay{name="proxy_Trojan",type="Trojan"} 666
+clash_proxy_delay{name="proxy_Vmess",type="Vmess"} 666
+# HELP clash_up Was the last scrape of Clash successful.
+# TYPE clash_up gauge
+clash_up 1
+# HELP clash_version_info Clash version info.
+# TYPE clash_version_info gauge
+clash_version_info{premium="true",version="2021.04.08"} 1
