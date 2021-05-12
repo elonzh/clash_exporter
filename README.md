@@ -1,1 +1,54 @@
-# clash_exporter
+# Clash Exporter for Prometheus
+
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/elonzh/clash_exporter?style=flat-square)](https://github.com/elonzh/clash_exporter/releases)
+[![Docker Pulls](https://img.shields.io/docker/pulls/elonzh/clash_exporter?style=flat-square)](https://hub.docker.com/r/elonzh/clash_exporter)
+[![GolangCI](https://golangci.com/badges/github.com/elonzh/clash_exporter.svg)](https://golangci.com)
+[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/elonzh/clash_exporter/build?style=flat-square)](https://github.com/elonzh/clash_exporter/actions)
+[![GitHub license](https://img.shields.io/github/license/elonzh/clash_exporter?style=flat-square)](https://github.com/elonzh/clash_exporter/blob/main/LICENSE)
+
+This is a simple server that scrapes [Clash](https://github.com/Dreamacro/clash) stats and exports them via HTTP for
+Prometheus consumption.
+
+## Getting Started
+
+To run it:
+
+```bash
+./clash_exporter [flags]
+```
+
+Help on flags:
+
+```bash
+./clash_exporter --help
+```
+
+For more information check the [source code documentation][gdocs].
+
+[gdocs]: https://pkg.go.dev/github.com/elonzh/clash_exporter
+
+### TLS and basic authentication
+
+The Clash Exporter supports TLS and basic authentication.
+
+To use TLS and/or basic authentication, you need to pass a configuration file
+using the `--web.config.file` parameter. The format of the file is described
+[in the exporter-toolkit repository](https://github.com/prometheus/exporter-toolkit/blob/master/docs/web-configuration.md).
+
+## Development
+
+### Building
+
+```bash
+make build
+```
+
+### Testing
+
+```bash
+make test
+```
+
+## License
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Felonzh%2Fclash_exporter.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Felonzh%2Fclash_exporter?ref=badge_large)
