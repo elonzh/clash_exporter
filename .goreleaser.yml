@@ -1,0 +1,46 @@
+# https://goreleaser.com/customization/
+project_name: clash_exporter
+builds:
+  - env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+    ldflags: |
+      -X github.com/prometheus/common/version.Version={{.Version}}
+      -X github.com/prometheus/common/version.Revision={{.FullCommit}}
+      -X github.com/prometheus/common/version.Branch={{.Branch}}
+      -X github.com/prometheus/common/version.BuildUser=
+      -X github.com/prometheus/common/version.BuildDate={{time "20060102-15:04:05"}}
+
+dockers:
+  - image_templates:
+      - elonzh/{{.ProjectName}}
+      - elonzh/{{.ProjectName}}:{{ .Tag }}
+      - elonzh/{{.ProjectName}}:v{{ .Major }}
+
+archives:
+  - format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - LICENSE*
+      - README*
+
+release:
+  # Repo in which the release will be created.
+  # Default is extracted from the origin remote URL.
+  github:
+    owner: elonzh
+    name: clash_exporter
+
+  # If set to true, will not auto-publish the release.
+  # Default is false.
+  draft: false
+
+  # If set to true, will mark the release as not ready for production.
+  # Default is false.
+  prerelease: true

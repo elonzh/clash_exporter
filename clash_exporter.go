@@ -145,11 +145,13 @@ var (
 	testUrlTimeout     time.Duration
 
 	logger = promlog.New(&promlog.Config{})
-	cmd    = &cobra.Command{}
+	cmd    = &cobra.Command{
+		Use: "clash_exporter",
+	}
 )
 
 func init() {
-	cmd.Flags().StringVar(&listenAddress, "web.listen-address", ":9101", "Address to listen on for web interface and telemetry")
+	cmd.Flags().StringVar(&listenAddress, "web.listen-address", ":9877", "Address to listen on for web interface and telemetry")
 	cmd.Flags().StringVar(&metricsPath, "web.telemetry-path", "/metrics", "Path under which to expose metrics")
 	cmd.Flags().StringVar(&tlsConfigPath, "web.config.file", "", "[EXPERIMENTAL] Path to configuration file that can enable TLS or authentication")
 
@@ -172,7 +174,7 @@ func init() {
 		level.Info(logger).Log("msg", "Listening on address", "address", listenAddress)
 		http.Handle(metricsPath, promhttp.Handler())
 		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-			w.Write([]byte(`<html>
+			_, _ = w.Write([]byte(`<html>
              <head><title>Clash Exporter</title></head>
              <body>
              <h1>Clash Exporter</h1>

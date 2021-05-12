@@ -64,6 +64,9 @@ func (c *Client) request(u *url.URL, v interface{}) error {
 		return err
 	}
 	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
 
 	//debug request
 	//buf := bytes.NewBuffer(nil)
