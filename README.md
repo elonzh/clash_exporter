@@ -2,7 +2,7 @@
 
 [![Docker Pulls](https://img.shields.io/docker/pulls/elonzh/clash_exporter?style=flat-square)](https://hub.docker.com/r/elonzh/clash_exporter)
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/elonzh/clash_exporter?style=flat-square)](https://github.com/elonzh/clash_exporter/releases)
-[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/elonzh/clash_exporter/goreleaser?style=flat-square)](https://github.com/elonzh/clash_exporter/actions)
+[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/elonzh/clash_exporter/release?style=flat-square)](https://github.com/elonzh/clash_exporter/actions)
 [![codecov](https://img.shields.io/codecov/c/github/elonzh/clash_exporter?style=flat-square&token=w1ngj45JWz)](https://codecov.io/gh/elonzh/clash_exporter)
 [![GitHub license](https://img.shields.io/github/license/elonzh/clash_exporter?style=flat-square)](https://github.com/elonzh/clash_exporter/blob/main/LICENSE)
 
