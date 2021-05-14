@@ -48,7 +48,3 @@ make build
 ```bash
 make test
 ```
-
-## License
-
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Felonzh%2Fclash_exporter.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Felonzh%2Fclash_exporter?ref=badge_large)
