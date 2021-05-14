@@ -131,7 +131,7 @@ func (e *Exporter) scrapeProvidersProxies(metrics chan<- prometheus.Metric) erro
 			for _, proxy := range provider.Proxies {
 				if IsConnectionProxy(proxy) {
 					n := len(proxy.History)
-					if n >= 1 && time.Now().Sub(proxy.History[n-1].Time) <= 1*time.Minute {
+					if n >= 1 && time.Since(proxy.History[n-1].Time) <= 1*time.Minute {
 						delay := proxy.History[n-1].Delay
 						if delay == 0 {
 							delay = MaxDelay
