@@ -1,6 +1,7 @@
 package main
 
 import (
+	"math"
 	"net"
 	"time"
 )
@@ -32,11 +33,33 @@ func IsConnectionProxy(proxy *Proxy) bool {
 	return ok
 }
 
+const MaxDelay = math.MaxUint16
+
+type ProxyDelay struct {
+	Time  time.Time `json:"time"`
+	Delay uint16    `json:"delay"`
+}
+
 type Proxy struct {
-	Type string
-	Name string
-	Now  string
-	All  []string
+	Type    string
+	Name    string
+	Now     string
+	All     []string
+	History []*ProxyDelay `json:"history"`
+}
+
+const (
+	VehicleTypeFile       = "File"
+	VehicleTypeHTTP       = "HTTP"
+	VehicleTypeCompatible = "Compatible"
+)
+
+type Provider struct {
+	Type        string    `json:"type"`
+	Name        string    `json:"name"`
+	VehicleType string    `json:"vehicleType"`
+	UpdatedAt   time.Time `json:"updatedAt"`
+	Proxies     []*Proxy  `json:"proxies"`
 }
 
 type Metadata struct {

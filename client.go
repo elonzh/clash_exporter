@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/go-kit/kit/log/level"
 	"io"
-	"math"
 	"net/url"
 	"strconv"
 	"sync"
@@ -17,18 +16,22 @@ type IClient interface {
 	GetVersion() (*Version, error)
 	GetProxies() (map[string]*Proxy, error)
 	GetProxyDelay(proxyName string, testUrl string, timeout time.Duration) (uint16, error)
+	GetProvidersProxies() (map[string]*Provider, error)
+	ProviderProxiesHealthCheck(providerName string) error
 	GetConnections() (*Snapshot, error)
 }
 
 const (
 	DefaultTestUrl        = "http://www.gstatic.com/generate_204"
 	DefaultTestUrlTimeout = 3 * time.Second
+	DefaultClientTimeout  = 5 * time.Second
 )
 
 var (
-	proxiesUrl, _     = url.Parse("/proxies")
-	connectionsUrl, _ = url.Parse("/connections")
-	versionUrl, _     = url.Parse("/version")
+	proxiesUrl, _          = url.Parse("/proxies")
+	providersProxiesUrl, _ = url.Parse("/providers/proxies")
+	connectionsUrl, _      = url.Parse("/connections")
+	versionUrl, _          = url.Parse("/version")
 )
 
 type Client struct {
@@ -43,7 +46,7 @@ func NewClient(baseUrl string, secret string) (*Client, error) {
 		return nil, err
 	}
 	c := &http.Client{
-		Timeout: 2 * time.Second,
+		Timeout: DefaultClientTimeout,
 	}
 	return &Client{
 		BaseUrl: u,
@@ -60,9 +63,10 @@ func (c *Client) request(u *url.URL, v interface{}) error {
 	}
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", c.Secret))
 	resp, err := c.client.Do(req)
-	if err != nil {
+	if err != nil || v == nil {
 		return err
 	}
+
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return err
@@ -114,6 +118,22 @@ func (c *Client) GetProxyDelay(proxyName string, testUrl string, timeout time.Du
 	return container["delay"], nil
 }
 
+func (c *Client) GetProvidersProxies() (map[string]*Provider, error) {
+	container := make(map[string]map[string]*Provider)
+	if err := c.request(providersProxiesUrl, &container); err != nil {
+		return nil, err
+	}
+	return container["providers"], nil
+}
+
+func (c *Client) ProviderProxiesHealthCheck(providerName string) error {
+	u, err := url.Parse(fmt.Sprintf("/providers/proxies/%s/healthcheck", providerName))
+	if err != nil {
+		return err
+	}
+	return c.request(u, nil)
+}
+
 func (c *Client) GetConnections() (*Snapshot, error) {
 	container := new(Snapshot)
 	if err := c.request(connectionsUrl, &container); err != nil {
@@ -142,7 +162,7 @@ func GetAllProxyDelay(proxies map[string]*Proxy, filter func(*Proxy) bool, clien
 				delay, err := client.GetProxyDelay(proxy.Name, testUrl, testUrlTimeout)
 				if err != nil {
 					level.Warn(logger).Log("msg", "error when get proxy delay", "err", err, "proxyType", proxy.Type, "proxyName", proxy.Name)
-					delay = math.MaxUint16
+					delay = MaxDelay
 				}
 				ch <- struct {
 					proxyName string

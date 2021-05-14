@@ -23,30 +23,74 @@ func expectMetrics(t *testing.T, c prometheus.Collector, fixture string) {
 type testClient struct {
 }
 
-func (t *testClient) GetVersion() (*Version, error) {
+func (c *testClient) GetVersion() (*Version, error) {
 	return &Version{
 		Premium: true,
 		Version: "2021.04.08",
 	}, nil
 }
 
-func (t *testClient) GetProxies() (map[string]*Proxy, error) {
-	proxies := make(map[string]*Proxy, len(AllProxyTypes))
-	for _, t := range AllProxyTypes {
-		n := fmt.Sprintf("proxy_%s", t)
-		proxies[n] = &Proxy{
+func (c *testClient) makeProxies(proxyNameTemplate string) []*Proxy {
+	proxies := make([]*Proxy, 0, len(AllProxyTypes))
+	now := time.Now()
+	for i, t := range AllProxyTypes {
+		n := fmt.Sprintf(proxyNameTemplate, t)
+		proxies = append(proxies, &Proxy{
 			Type: t,
 			Name: n,
-		}
+			History: []*ProxyDelay{
+				{
+					Time:  now,
+					Delay: uint16(i),
+				},
+			},
+		})
+	}
+	return proxies
+}
+
+func (c *testClient) GetProxies() (map[string]*Proxy, error) {
+	proxies := make(map[string]*Proxy, len(AllProxyTypes))
+	for _, p := range c.makeProxies("proxy_%s") {
+		proxies[p.Name] = p
 	}
 	return proxies, nil
 }
 
-func (t *testClient) GetProxyDelay(proxyName string, testUrl string, timeout time.Duration) (uint16, error) {
+func (c *testClient) GetProxyDelay(proxyName string, testUrl string, timeout time.Duration) (uint16, error) {
 	return 666, nil
 }
 
-func (t *testClient) GetConnections() (*Snapshot, error) {
+func (c *testClient) GetProvidersProxies() (map[string]*Provider, error) {
+	return map[string]*Provider{
+		"provider_1": {
+			Type:        "Proxy",
+			Name:        "provider_1",
+			VehicleType: VehicleTypeHTTP,
+			UpdatedAt:   time.Time{},
+			Proxies:     c.makeProxies("provider_1_proxy_%s"),
+		},
+		"provider_2": {
+			Type:        "Proxy",
+			Name:        "provider_2",
+			VehicleType: VehicleTypeFile,
+			Proxies:     c.makeProxies("provider_2_proxy_%s"),
+		},
+		"provider_3": {
+			Type:        "Proxy",
+			Name:        "provider_2",
+			VehicleType: VehicleTypeCompatible,
+			Proxies:     c.makeProxies("provider_3_proxy_%s"),
+		},
+	}, nil
+}
+
+func (c *testClient) ProviderProxiesHealthCheck(providerName string) error {
+	time.Sleep(3 * time.Second)
+	return nil
+}
+
+func (c *testClient) GetConnections() (*Snapshot, error) {
 	return &Snapshot{
 		DownloadTotal: 111,
 		UploadTotal:   222,
@@ -59,5 +103,17 @@ func TestExporter(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	expectMetrics(t, e, "normal.metrics")
+	t.Run("expect test metrics", func(t *testing.T) {
+		expectMetrics(t, e, "normal.metrics")
+	})
+
+	t.Run("CollectToText", func(t *testing.T) {
+		text, err := CollectToText(e)
+		if err != nil || text == "" {
+			t.Errorf(text, err)
+		}
+		//f, err := os.Create("test/test.metrics")
+		//f.WriteString(text)
+		//f.Close()
+	})
 }

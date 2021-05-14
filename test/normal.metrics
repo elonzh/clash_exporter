@@ -9,13 +9,27 @@ clash_connection_upload_total 222
 clash_exporter_scrapes_total 1
 # HELP clash_proxy_delay Proxy delay.
 # TYPE clash_proxy_delay gauge
-clash_proxy_delay{name="proxy_Http",type="Http"} 666
-clash_proxy_delay{name="proxy_Shadowsocks",type="Shadowsocks"} 666
-clash_proxy_delay{name="proxy_ShadowsocksR",type="ShadowsocksR"} 666
-clash_proxy_delay{name="proxy_Snell",type="Snell"} 666
-clash_proxy_delay{name="proxy_Socks5",type="Socks5"} 666
-clash_proxy_delay{name="proxy_Trojan",type="Trojan"} 666
-clash_proxy_delay{name="proxy_Vmess",type="Vmess"} 666
+clash_proxy_delay{name="provider_1_proxy_Http",provider="provider_1",type="Http"} 4
+clash_proxy_delay{name="provider_1_proxy_Shadowsocks",provider="provider_1",type="Shadowsocks"} 65535
+clash_proxy_delay{name="provider_1_proxy_ShadowsocksR",provider="provider_1",type="ShadowsocksR"} 1
+clash_proxy_delay{name="provider_1_proxy_Snell",provider="provider_1",type="Snell"} 2
+clash_proxy_delay{name="provider_1_proxy_Socks5",provider="provider_1",type="Socks5"} 3
+clash_proxy_delay{name="provider_1_proxy_Trojan",provider="provider_1",type="Trojan"} 6
+clash_proxy_delay{name="provider_1_proxy_Vmess",provider="provider_1",type="Vmess"} 5
+clash_proxy_delay{name="provider_2_proxy_Http",provider="provider_2",type="Http"} 4
+clash_proxy_delay{name="provider_2_proxy_Shadowsocks",provider="provider_2",type="Shadowsocks"} 65535
+clash_proxy_delay{name="provider_2_proxy_ShadowsocksR",provider="provider_2",type="ShadowsocksR"} 1
+clash_proxy_delay{name="provider_2_proxy_Snell",provider="provider_2",type="Snell"} 2
+clash_proxy_delay{name="provider_2_proxy_Socks5",provider="provider_2",type="Socks5"} 3
+clash_proxy_delay{name="provider_2_proxy_Trojan",provider="provider_2",type="Trojan"} 6
+clash_proxy_delay{name="provider_2_proxy_Vmess",provider="provider_2",type="Vmess"} 5
+clash_proxy_delay{name="proxy_Http",provider="",type="Http"} 666
+clash_proxy_delay{name="proxy_Shadowsocks",provider="",type="Shadowsocks"} 666
+clash_proxy_delay{name="proxy_ShadowsocksR",provider="",type="ShadowsocksR"} 666
+clash_proxy_delay{name="proxy_Snell",provider="",type="Snell"} 666
+clash_proxy_delay{name="proxy_Socks5",provider="",type="Socks5"} 666
+clash_proxy_delay{name="proxy_Trojan",provider="",type="Trojan"} 666
+clash_proxy_delay{name="proxy_Vmess",provider="",type="Vmess"} 666
 # HELP clash_up Was the last scrape of Clash successful.
 # TYPE clash_up gauge
 clash_up 1

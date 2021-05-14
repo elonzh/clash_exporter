@@ -4,6 +4,7 @@ import (
 	"github.com/go-kit/kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/prometheus/common/expfmt"
 	"github.com/prometheus/common/promlog"
 	"github.com/prometheus/common/version"
 	"github.com/prometheus/exporter-toolkit/web"
@@ -11,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -22,7 +24,7 @@ const (
 var (
 	clashInfo          = prometheus.NewDesc(prometheus.BuildFQName(namespace, "version", "info"), "Clash version info.", []string{"premium", "version"}, nil)
 	clashUp            = prometheus.NewDesc(prometheus.BuildFQName(namespace, "", "up"), "Was the last scrape of Clash successful.", nil, nil)
-	proxyDelay         = prometheus.NewDesc(prometheus.BuildFQName(namespace, "proxy", "delay"), "Proxy delay.", []string{"type", "name"}, nil)
+	proxyDelay         = prometheus.NewDesc(prometheus.BuildFQName(namespace, "proxy", "delay"), "Proxy delay.", []string{"type", "name", "provider"}, nil)
 	downloadTotal      = prometheus.NewDesc(prometheus.BuildFQName(namespace, "connection", "download_total"), "Number of bytes that downloaded by clash.", nil, nil)
 	uploadTotal        = prometheus.NewDesc(prometheus.BuildFQName(namespace, "connection", "upload_total"), "Number of bytes that uploaded by clash.", nil, nil)
 	connectionDownload = prometheus.NewDesc(prometheus.BuildFQName(namespace, "connection", "download"), "Number of bytes for specific connection that downloaded by clash.", nil, nil)
@@ -89,7 +91,58 @@ func (e *Exporter) scrapeProxies(metrics chan<- prometheus.Metric) error {
 	}
 	for proxyName, delay := range GetAllProxyDelay(proxies, IsConnectionProxy, e.Client, e.testUrl, e.testUrlTimeout) {
 		proxy := proxies[proxyName]
-		metrics <- prometheus.MustNewConstMetric(proxyDelay, prometheus.GaugeValue, float64(delay), proxy.Type, proxy.Name)
+		metrics <- prometheus.MustNewConstMetric(proxyDelay, prometheus.GaugeValue, float64(delay), proxy.Type, proxy.Name, "")
+	}
+	return nil
+}
+
+func (e *Exporter) scrapeProvidersProxies(metrics chan<- prometheus.Metric) error {
+	providers, err := e.Client.GetProvidersProxies()
+	if err != nil {
+		return err
+	}
+	wg := sync.WaitGroup{}
+	count := 0
+	for _, provider := range providers {
+		if provider.VehicleType == VehicleTypeHTTP || provider.VehicleType == VehicleTypeFile {
+			wg.Add(1)
+			count += 1
+			go func(provider *Provider) {
+				defer wg.Done()
+				err = e.Client.ProviderProxiesHealthCheck(provider.Name)
+				if err != nil {
+					level.Error(logger).Log("msg", "error when do health check", "err", err, "provider", provider.Name)
+				}
+			}(provider)
+		}
+	}
+	wg.Wait()
+	if count == 0 {
+		level.Info(logger).Log("msg", "no provider do health check")
+		return nil
+	}
+
+	providers, err = e.Client.GetProvidersProxies()
+	if err != nil {
+		return err
+	}
+	for _, provider := range providers {
+		if provider.VehicleType == VehicleTypeHTTP || provider.VehicleType == VehicleTypeFile {
+			for _, proxy := range provider.Proxies {
+				if IsConnectionProxy(proxy) {
+					n := len(proxy.History)
+					if n >= 1 && time.Now().Sub(proxy.History[n-1].Time) <= 1*time.Minute {
+						delay := proxy.History[n-1].Delay
+						if delay == 0 {
+							delay = MaxDelay
+						}
+						metrics <- prometheus.MustNewConstMetric(proxyDelay, prometheus.GaugeValue, float64(delay), proxy.Type, proxy.Name, provider.Name)
+					} else {
+						level.Error(logger).Log("msg", "provider proxy should have at least one history", "proxy", proxy.Name, "providerName", provider.Name)
+					}
+				}
+			}
+		}
 	}
 	return nil
 }
@@ -113,7 +166,7 @@ func (e *Exporter) scrape(metrics chan<- prometheus.Metric) (up float64) {
 	e.totalScrapes.Inc()
 	errors := make([]error, 0)
 	scrapes := []func(metrics chan<- prometheus.Metric) error{
-		e.scrapeVersion, e.scrapeProxies, e.scrapeConnections,
+		e.scrapeVersion, e.scrapeProxies, e.scrapeProvidersProxies, e.scrapeConnections,
 	}
 	wg := sync.WaitGroup{}
 	wg.Add(len(scrapes))
@@ -132,6 +185,24 @@ func (e *Exporter) scrape(metrics chan<- prometheus.Metric) (up float64) {
 		return 0
 	}
 	return 1
+}
+
+func CollectToText(c prometheus.Collector) (string, error) {
+	buf := &strings.Builder{}
+	enc := expfmt.NewEncoder(buf, expfmt.FmtText)
+	reg := prometheus.NewPedanticRegistry()
+	reg.MustRegister(c)
+	mfs, err := reg.Gather()
+	if err != nil {
+		return "", err
+	}
+	for _, mf := range mfs {
+		err = enc.Encode(mf)
+		if err != nil {
+			return "", err
+		}
+	}
+	return buf.String(), nil
 }
 
 var (
