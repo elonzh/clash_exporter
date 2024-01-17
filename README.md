@@ -9,6 +9,8 @@
 This is a simple server that scrapes [Clash](https://github.com/Dreamacro/clash) stats and exports them via HTTP for
 Prometheus consumption.
 
+There is a [`dashboard.json`](dashboard.json) file that can be imported into Grafana to provide a sample dashboard.
+
 ## Getting Started
 
 To run it:
